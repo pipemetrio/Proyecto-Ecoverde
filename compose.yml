@@ -1,0 +1,38 @@
+
+services:
+  # Servicio 1: Servidor Web Institucional para EcoVerde
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecoverde_web
+    ports:
+      - "8080:80" # Expone el puerto 8080 en tu máquina local
+    networks:
+      - ecoverde_network
+    depends_on:
+      - db
+    restart: always
+
+  # Servicio 2: Base de Datos (Soluciona el requerimiento de múltiples servicios y persistencia)
+  db:
+    image: mariadb:10.11-jammy
+    container_name: ecoverde_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ecoverde_secure_password
+      MYSQL_DATABASE: ecoverde_db
+    volumes:
+      - ecoverde_db_data:/var/lib/mysql # Volumen para persistencia de datos
+    networks:
+      - ecoverde_network
+    restart: always
+
+# Definición de Volúmenes (Requerimiento Mínimo)
+volumes:
+  ecoverde_db_data:
+    driver: local
+
+# Definición de Redes Personalizadas (Requerimiento Mínimo)
+networks:
+  ecoverde_network:
+    driver: bridge
