@@ -46,3 +46,46 @@ El hacerlo permite crear nuevos contenedores con privilegios elevados, leer arch
 | Posibilidad de escalación de privilegios desde procesos internos. | Configurar `security_opt: - no-new-privileges:true`. |
 | Ausencia de verificación del estado de la aplicación. | Agregar un `healthcheck` para supervisar la disponibilidad del servicio. |
 | Falta de política de reinicio ante fallos. | Configurar `restart: unless-stopped` o una política adecuada al entorno. |
+
+## Checklist Operativo de Seguridad para Docker en Producción
+
+Evaluación realizada sobre el archivo `compose.prod.yml` desarrollado en la práctica.
+
+| # | Control | ¿Cumple? | Evidencia / Observación |
+|---|----------|----------|-------------------------|
+| 1 | Base image pequeña y confiable | ✅ Sí | El Dockerfile utiliza `python:3.12-slim`. |
+| 2 | No ejecutar la aplicación como root | ✅ Sí | Se crea el usuario `appuser` y se define `USER appuser`. |
+| 3 | Uso de `.dockerignore` y manejo adecuado de secretos | ✅ Sí | Existe archivo `.dockerignore` y se utilizan Docker Secrets mediante `/run/secrets/banner_msg`. |
+| 4 | Configurar `healthcheck` y `restart policy` | ✅ Sí | Se implementa `healthcheck` y `restart: unless-stopped`. |
+| 5 | Utilizar volúmenes únicamente para datos persistentes | ✅ Sí | Se utiliza el volumen `app-data` para almacenar el contador de visitas. |
+| 6 | Aplicar `read_only` o montajes de solo lectura cuando sea posible | ✅ Sí | El servicio se ejecuta con `read_only: true`. |
+| 7 | No montar `docker.sock` sin una necesidad justificada | ✅ Sí | No existe montaje de `/var/run/docker.sock`. |
+| 8 | Evitar `privileged: true` y privilegios innecesarios | ✅ Sí | El servicio no utiliza `privileged: true`. |
+| 9 | Mantener imágenes actualizadas y controlar versiones | ✅ Sí | Se utiliza una versión específica (`python:3.12-slim`), pero no se evidencia un proceso de revisión de vulnerabilidades. |
+| 10 | Contar con logs, métricas y procedimientos de recuperación | ✅ Sí | Se verifican logs y estadísticas con Docker, pero no se documenta un procedimiento formal de rollback. |
+
+### Controles técnicos definidos por el equipo
+
+1. Ejecutar los contenedores con usuarios no privilegiados (`USER appuser`) para reducir riesgos de seguridad.
+2. Utilizar Docker Secrets y filesystem de solo lectura (`read_only`) para proteger información sensible y limitar modificaciones no autorizadas.
+
+### Controles de operación definidos por el equipo
+
+1. Revisar periódicamente las imágenes utilizadas y aplicar actualizaciones de seguridad cuando sea necesario.
+2. Mantener procedimientos documentados de monitoreo, respaldo y recuperación del servicio ante fallos.
+
+### ¿Qué diferencia principal existe entre “correr un contenedor” y “operarlo en producción”?
+
+Correr un contenedor es ejecutar una aplicación dentro de Docker y verificar que funciona. Operarlo en producción implica garantizar su disponibilidad, seguridad, persistencia de datos, monitoreo y capacidad de recuperación ante fallos. 
+
+### ¿Qué medida de seguridad te parece más valiosa para este nivel de formación y por qué?
+
+La ejecución de la aplicación como usuario no root me parece la medida más valiosa, porque reduce vulnerabilidades. Además, es una práctica sencilla de implementar.
+
+### ¿Qué error te parecería más grave publicar en un Dockerfile productivo?
+
+Uno de los errores más graves sería incluir secretos o contraseñas directamente en la imagen o en el código fuente. Esto puede exponer información sensible y comprometer la seguridad de la aplicación.
+
+### ¿Qué harías primero si tuvieras que mejorar un contenedor ya existente?
+
+Primero revisaría la seguridad básica del contenedor: verificar si utiliza una imagen confiable, si ejecuta procesos como usuario no root, si maneja adecuadamente secretos y volúmenes. A partir de eso aplicaría las mejoras necesarias para reducir riesgos y aumentar la estabilidad del servicio.
