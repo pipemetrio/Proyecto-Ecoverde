@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-semana10
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-semana10
+  template:
+    metadata:
+      labels:
+        app: web-semana10
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
